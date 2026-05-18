@@ -17,28 +17,42 @@ connectDB();
 const app = express();
 
 /* =========================
-   CORS FIX (CLEAN + SAFE)
+   CORS (PRODUCTION + DEV FIX)
 ========================= */
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://127.0.0.1:5173",
-  "http://127.0.0.1:5174"
+  "http://127.0.0.1:5174",
+
+  // ✅ YOUR VERCEL FRONTEND (ADD BOTH)
+  "https://luxewigs-nu.vercel.app",
+  "https://luxewigs.vercel.app"
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log("❌ Blocked by CORS:", origin);
-      callback(null, true); // don't break dev
-    }
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
 
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("❌ Blocked by CORS:", origin);
+
+      // ⚠️ IMPORTANT: DON'T silently allow in production anymore
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true
+  })
+);
+
+/* =========================
+   BODY PARSER
+========================= */
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 /* =========================
    ROUTES
@@ -54,18 +68,29 @@ app.use("/api/upload", uploadRoutes);
    HEALTH CHECK
 ========================= */
 app.get("/", (req, res) => {
-  res.send("Luxe Wigs API is running 🚀");
+  res.json({
+    status: "success",
+    message: "Luxe Wigs API is running 🚀"
+  });
 });
 
 /* =========================
-   ERROR HANDLER
+   GLOBAL ERROR HANDLER
 ========================= */
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ message: "Server Error" });
+  console.error("❌ Server Error:", err.message);
+
+  res.status(500).json({
+    success: false,
+    message: err.message || "Server Error"
+  });
 });
 
+/* =========================
+   START SERVER
+========================= */
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
