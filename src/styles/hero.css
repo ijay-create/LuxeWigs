@@ -1,0 +1,129 @@
+.hero{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  padding-top:140px;
+  background:
+  radial-gradient(circle at top left,#f4dfcf,transparent 30%),
+  radial-gradient(circle at bottom right,#f1d2bc,transparent 30%),
+  #fdf7f2;
+}
+
+.hero-content{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:60px;
+  align-items:center;
+}
+
+.hero-tag{
+  background:#f0dfd3;
+  padding:10px 20px;
+  border-radius:40px;
+  display:inline-block;
+  margin-top: 50px;
+  margin-bottom:25px;
+}
+
+.hero-text h1{
+  font-size:3rem;
+  line-height:1.1;
+  margin-bottom:25px;
+}
+
+.hero-text p{
+  font-size:1rem;
+  line-height:1.8;
+  color:#5c4c45;
+  margin-bottom:35px;
+}
+
+
+.hero-buttons{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.hero-btn{
+  padding:16px 32px;
+  border-radius:40px;
+
+  background:#1f140f;
+  color:white;
+
+  font-size:1rem;
+  font-weight:500;
+
+  transition:.4s ease;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.hero-btn:hover{
+  transform:translateY(-5px);
+}
+
+.outline-btn{
+  background:transparent;
+  border:1px solid #1f140f;
+  color:#1f140f;
+}
+
+.hero-image{
+  position:relative;
+}
+
+.hero-image img{
+  border-radius:30px;
+}
+
+.floating-card{
+  position:absolute;
+  background:white;
+  padding:15px 20px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  animation:float 4s infinite ease-in-out;
+}
+
+.card-one{
+  top:10%;
+  left:-10%;
+}
+
+.card-two{
+  right:-10%;
+  top:30%;
+}
+
+.card-three{
+  bottom:10%;
+  left:-5%;
+}
+
+@keyframes float{
+  0%{
+    transform:translateY(0);
+  }
+  50%{
+    transform:translateY(-10px);
+  }
+  100%{
+    transform:translateY(0);
+  }
+}
+
+@media(max-width:992px){
+
+  .hero-content{
+    grid-template-columns:1fr;
+  }
+
+  .hero-text h1{
+    font-size:3.5rem;
+  }
+
+}

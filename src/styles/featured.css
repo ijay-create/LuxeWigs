@@ -1,0 +1,112 @@
+.featured{
+  padding:120px 0;
+}
+
+.featured-header{
+  text-align:center;
+  margin-bottom:70px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.section-subtitle{
+  margin-bottom:30px;
+  text-align:center;
+  align-items: center;
+}
+
+.featured-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:30px;
+}
+
+.wig-card{
+  background:white;
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+  transition:.4s;
+}
+
+.wig-image{
+  position:relative;
+  overflow:hidden;
+}
+
+.wig-image img{
+  height:370px;
+  object-fit:cover;
+  transition:.5s;
+}
+
+.wig-card:hover img{
+  transform:scale(1.08);
+}
+
+.wishlist-btn{
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1rem;
+}
+
+.wig-content{
+  padding:25px;
+}
+
+.wig-rating{
+  display:flex;
+  gap:5px;
+  color:#d8a15d;
+  margin-bottom:15px;
+}
+
+.wig-content h3{
+  font-size:1.4rem;
+  margin-bottom:10px;
+}
+
+.wig-price{
+  font-size:1.3rem;
+  font-weight:600;
+  margin-bottom:20px;
+}
+
+.cart-btn{
+  width:100%;
+  padding:15px;
+  border-radius:40px;
+  background:#1f140f;
+  color:white;
+  font-size:1rem;
+  transition:.4s;
+}
+
+.cart-btn:hover{
+  transform:translateY(-4px);
+}
+
+@media(max-width:1100px){
+
+  .featured-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+@media(max-width:700px){
+
+  .featured-grid{
+    grid-template-columns:1fr;
+  }
+
+}

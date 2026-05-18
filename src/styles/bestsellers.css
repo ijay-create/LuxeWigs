@@ -1,0 +1,60 @@
+.best-sellers{
+  padding:120px 0;
+  overflow:hidden;
+}
+
+.best-header{
+  text-align:center;
+  margin-bottom:60px;
+}
+
+.best-scroll{
+  display:flex;
+  gap:30px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  padding-bottom:10px;
+}
+
+.best-scroll::-webkit-scrollbar{
+  display:none;
+}
+
+.best-item{
+  min-width:350px;
+  scroll-snap-align:start;
+}
+
+.bestsellers-page {
+  padding: 8rem 0 5rem;
+  background: #fff;
+  min-height: 100vh;
+}
+
+.bestsellers-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.bestsellers-header h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #111;
+}
+
+.bestsellers-header p {
+  color: #777;
+  font-size: 1.1rem;
+}
+
+.bestsellers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .bestsellers-header h1 {
+    font-size: 2.2rem;
+  }
+}

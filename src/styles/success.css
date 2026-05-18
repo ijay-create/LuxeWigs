@@ -1,0 +1,47 @@
+.success-page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+
+  padding-top:120px;
+  padding-bottom:80px;
+
+  background:
+    radial-gradient(circle at top left,#f4dfcf,transparent 35%),
+    radial-gradient(circle at bottom right,#f1d2bc,transparent 35%),
+    #fdf7f2;
+}
+
+.success-page .container{
+  max-width:700px;
+}
+
+.success-page h1{
+  font-size:2rem;
+  margin-bottom:20px;
+  color:#1f140f;
+}
+
+.success-page p{
+  font-size:1.2rem;
+  color:#5c4c45;
+  margin-bottom:40px;
+  line-height:1.8;
+}
+
+.success-page button{
+  padding:16px 32px;
+  border-radius:40px;
+  background:#1f140f;
+  color:white;
+  font-size:1rem;
+  border:none;
+  cursor:pointer;
+  transition:.4s;
+}
+
+.success-page button:hover{
+  transform:translateY(-5px);
+}
