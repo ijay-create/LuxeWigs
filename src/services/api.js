@@ -1,127 +1,108 @@
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 /* =========================
-   🔐 TOKEN HELPER
+   TOKEN
 ========================= */
-const getToken = () => {
-  return localStorage.getItem("token");
+const getToken = () => localStorage.getItem("token");
+
+/* =========================
+   SAFE FETCH
+========================= */
+const safeFetch = async (url, options = {}) => {
+  const res = await fetch(url, options);
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(
+      data.message || "Request failed"
+    );
+  }
+
+  return data;
 };
 
 /* =========================
-   ❤️ WISHLIST API
+   PRODUCTS
 ========================= */
 
-// GET WISHLIST
-export const fetchWishlist = async () => {
-  const res = await fetch(`${BASE_URL}/wishlist`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`
-    }
-  });
-
-  return res.json();
-};
-
-// ADD TO WISHLIST
-export const addWishlistItem = async (item) => {
-  const res = await fetch(`${BASE_URL}/wishlist/add`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(item)
-  });
-
-  return res.json();
-};
-
-// REMOVE FROM WISHLIST
-export const removeWishlistItem = async (id) => {
-  const res = await fetch(`${BASE_URL}/wishlist/remove`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: JSON.stringify({ id })
-  });
-
-  return res.json();
-};
-
-/* =========================
-   🛍️ PRODUCT API (PUBLIC)
-========================= */
-
-// GET ALL PRODUCTS
+// GET PRODUCTS
 export const fetchProducts = async () => {
-  const res = await fetch(`${BASE_URL}/products`);
-  return res.json();
+  const data = await safeFetch(
+    `${BASE_URL}/products`
+  );
+
+  return data.products || [];
 };
 
-// IMPORTANT FIX
-// FeaturedWigs.jsx is importing getProducts
+// alias
+
 export const getProducts = async () => {
   const res = await fetch(`${BASE_URL}/products`);
-  return res.json();
+  const data = await res.json();
+
+  return data.products; // ALWAYS array
 };
 
 // SEARCH PRODUCTS
 export const searchProducts = async (query) => {
-  const res = await fetch(
-    `${BASE_URL}/products/search?q=${encodeURIComponent(query)}`
+  const data = await safeFetch(
+    `${BASE_URL}/products/search?q=${encodeURIComponent(
+      query
+    )}`
   );
 
-  return res.json();
+  return data.products || [];
 };
-
-/* =========================
-   🔒 ADMIN PRODUCT API
-========================= */
 
 // CREATE PRODUCT
 export const createProduct = async (product) => {
-  const res = await fetch(`${BASE_URL}/products`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(product)
-  });
-
-  return res.json();
+  return await safeFetch(
+    `${BASE_URL}/products`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify(product)
+    }
+  );
 };
 
 // UPDATE PRODUCT
-export const updateProduct = async (id, product) => {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(product)
-  });
-
-  return res.json();
+export const updateProduct = async (
+  id,
+  product
+) => {
+  return await safeFetch(
+    `${BASE_URL}/products/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify(product)
+    }
+  );
 };
 
 // DELETE PRODUCT
 export const deleteProduct = async (id) => {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${getToken()}`
+  return await safeFetch(
+    `${BASE_URL}/products/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${getToken()}`
+      }
     }
-  });
-
-  return res.json();
+  );
 };
 
 /* =========================
-   ☁️ IMAGE UPLOAD API
+   IMAGE UPLOAD
 ========================= */
 
 export const uploadImage = async (file) => {
@@ -129,13 +110,110 @@ export const uploadImage = async (file) => {
 
   formData.append("image", file);
 
-  const res = await fetch(`${BASE_URL}/upload`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${getToken()}`
-    },
-    body: formData
-  });
+  const data = await safeFetch(
+    `${BASE_URL}/upload`,
+    {
+      method: "POST",
+      body: formData
+    }
+  );
 
-  return res.json();
+  // ✅ FINAL FIX
+  return (
+    data.url ||
+    data.imageUrl ||
+    data.secure_url ||
+    ""
+  );
+};
+
+/* =========================
+   AUTH
+========================= */
+
+export const loginUser = async (
+  email,
+  password
+) => {
+  return await safeFetch(
+    `${BASE_URL}/auth/login`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    }
+  );
+};
+
+export const registerUser = async (
+  name,
+  email,
+  password
+) => {
+  return await safeFetch(
+    `${BASE_URL}/auth/register`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password
+      })
+    }
+  );
+};
+
+/* =========================
+   WISHLIST
+========================= */
+
+export const fetchWishlist = async () => {
+  return await safeFetch(
+    `${BASE_URL}/wishlist`,
+    {
+      headers: {
+        Authorization: `Bearer ${getToken()}`
+      }
+    }
+  );
+};
+
+export const addWishlistItem = async (
+  item
+) => {
+  return await safeFetch(
+    `${BASE_URL}/wishlist/add`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify(item)
+    }
+  );
+};
+
+export const removeWishlistItem = async (
+  id
+) => {
+  return await safeFetch(
+    `${BASE_URL}/wishlist/remove`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ id })
+    }
+  );
 };

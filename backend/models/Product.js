@@ -2,16 +2,46 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    image: { type: String, required: true },
-    category: String,
-    description: String
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    price: {
+      type: Number,
+      required: true
+    },
+
+    image: {
+      type: String,
+      required: true
+    },
+
+    category: {
+      type: String,
+      default: "Luxury Wig"
+    },
+
+    description: {
+      type: String,
+      default: ""
+    },
+
+    // ✅ FIX ADDED
+    stock: {
+      type: Number,
+      default: 0
+    }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
-// 🔥 TEXT INDEX (IMPORTANT FOR SEARCH)
+/* =========================
+   🔍 SEARCH INDEX
+========================= */
 productSchema.index({
   name: "text",
   category: "text",
@@ -19,4 +49,3 @@ productSchema.index({
 });
 
 export default mongoose.model("Product", productSchema);
-

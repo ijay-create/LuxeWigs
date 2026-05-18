@@ -4,18 +4,16 @@ import Topbar from "../components/Topbar";
 import {
   fetchProducts,
   createProduct,
-  deleteProduct
+  deleteProduct,
+  uploadImage
 } from "../../services/api";
 
 import "../../styles/admin.css";
 
 const Products = () => {
-
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  // NEW: separate file state
   const [imageFile, setImageFile] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -27,18 +25,21 @@ const Products = () => {
     stock: ""
   });
 
-  const token = localStorage.getItem("token");
-
   // =========================
   // LOAD PRODUCTS
   // =========================
   const loadProducts = async () => {
     setLoading(true);
+
     try {
       const data = await fetchProducts();
+
+      // ✅ fetchProducts already returns array
       setProducts(data || []);
+
     } catch (err) {
-      console.log(err);
+      console.error("Load products error:", err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -52,26 +53,10 @@ const Products = () => {
   // HANDLE INPUT
   // =========================
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
-  };
-
-  // =========================
-  // UPLOAD IMAGE TO CLOUDINARY
-  // =========================
-  const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const res = await fetch("http://localhost:5000/api/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-    return data.url;
+    }));
   };
 
   // =========================
@@ -81,25 +66,34 @@ const Products = () => {
     e.preventDefault();
 
     if (submitting) return;
+
     setSubmitting(true);
 
     try {
       let imageUrl = formData.image;
 
-      // IF USER UPLOADED FILE
+      // ✅ UPLOAD IMAGE
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
       }
 
-      await createProduct(
-        {
-          ...formData,
-          image: imageUrl
-        },
-        token
-      );
+      // ✅ VALIDATION
+      if (!imageUrl) {
+        alert("Image upload failed");
+        return;
+      }
 
-      // RESET
+      // ✅ CREATE PRODUCT
+      await createProduct({
+        name: formData.name,
+        price: Number(formData.price),
+        image: imageUrl,
+        category: formData.category,
+        description: formData.description,
+        stock: Number(formData.stock)
+      });
+
+      // ✅ RESET FORM
       setFormData({
         name: "",
         price: "",
@@ -111,10 +105,14 @@ const Products = () => {
 
       setImageFile(null);
 
+      // ✅ RELOAD PRODUCTS
       await loadProducts();
 
+      alert("Product created successfully");
+
     } catch (err) {
-      console.log(err);
+      console.error("Create product error:", err);
+      alert(err.message || "Failed to create product");
     } finally {
       setSubmitting(false);
     }
@@ -124,19 +122,26 @@ const Products = () => {
   // DELETE PRODUCT
   // =========================
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this product?")) return;
+    const confirmDelete = window.confirm(
+      "Delete this product?"
+    );
+
+    if (!confirmDelete) return;
 
     try {
-      await deleteProduct(id, token);
-      setProducts((prev) => prev.filter(p => p._id !== id));
+      await deleteProduct(id);
+
+      setProducts((prev) =>
+        prev.filter((p) => p._id !== id)
+      );
+
     } catch (err) {
-      console.log(err);
+      console.error("Delete error:", err);
     }
   };
 
   return (
     <div className="admin-layout">
-
       <main className="admin-main">
 
         <Topbar />
@@ -145,8 +150,13 @@ const Products = () => {
 
           <h2>Products Management</h2>
 
-          {/* FORM */}
-          <form className="product-form" onSubmit={handleSubmit}>
+          {/* =========================
+              PRODUCT FORM
+          ========================= */}
+          <form
+            className="product-form"
+            onSubmit={handleSubmit}
+          >
 
             <input
               type="text"
@@ -166,15 +176,16 @@ const Products = () => {
               required
             />
 
-            {/* NEW: FILE UPLOAD */}
+            {/* IMAGE FILE */}
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              required
+              onChange={(e) =>
+                setImageFile(e.target.files[0])
+              }
             />
 
-            {/* optional fallback URL */}
+            {/* IMAGE URL */}
             <input
               type="text"
               name="image"
@@ -206,54 +217,78 @@ const Products = () => {
               onChange={handleChange}
             />
 
-            <button type="submit" disabled={submitting}>
-              {submitting ? "Uploading..." : "Add Product"}
+            <button
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting
+                ? "Uploading..."
+                : "Add Product"}
             </button>
 
           </form>
 
           {/* LOADING */}
-          {loading && <p>Loading products...</p>}
-
-          {/* EMPTY */}
-          {!loading && products.length === 0 && (
-            <p>No products yet. Add your first product 👇</p>
+          {loading && (
+            <p>Loading products...</p>
           )}
 
-          {/* GRID */}
+          {/* EMPTY STATE */}
+          {!loading && products.length === 0 && (
+            <p>
+              No products yet. Add your first
+              product 👇
+            </p>
+          )}
+
+          {/* PRODUCTS GRID */}
           <div className="admin-products-grid">
 
             {products.map((item) => (
-              <div className="admin-product-card" key={item._id}>
+              <div
+                className="admin-product-card"
+                key={item._id}
+              >
 
                 <img
                   src={item.image}
                   alt={item.name}
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/300";
+                    e.target.src =
+                      "https://via.placeholder.com/300";
                   }}
                 />
 
                 <h3>{item.name}</h3>
 
-                <p>₦{Number(item.price).toLocaleString()}</p>
+                <p>
+                  ₦
+                  {Number(
+                    item.price
+                  ).toLocaleString()}
+                </p>
 
                 {item.stock !== undefined && (
-                  <small style={{ color: item.stock < 5 ? "red" : "green" }}>
+                  <small
+                    style={{
+                      color:
+                        item.stock < 5
+                          ? "red"
+                          : "green"
+                    }}
+                  >
                     Stock: {item.stock}
                   </small>
                 )}
 
-                <div className="admin-product-actions">
-
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(item._id)}
-                  >
-                    Delete
-                  </button>
-
-                </div>
+                <button
+                  className="delete-btn"
+                  onClick={() =>
+                    handleDelete(item._id)
+                  }
+                >
+                  Delete
+                </button>
 
               </div>
             ))}
@@ -263,7 +298,6 @@ const Products = () => {
         </div>
 
       </main>
-
     </div>
   );
 };

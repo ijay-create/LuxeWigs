@@ -1,31 +1,32 @@
 import Product from "../models/Product.js";
 
-
-// ========================================
-// SEARCH PRODUCTS
-// ========================================
+/* =========================
+   SEARCH PRODUCTS
+========================= */
 export const searchProducts = async (req, res) => {
   try {
     const { q } = req.query;
 
-    if (!q) {
-      const allProducts = await Product.find().sort({ createdAt: -1 });
-      return res.json(allProducts);
-    }
+    const filter = q
+      ? {
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { category: { $regex: q, $options: "i" } },
+            { description: { $regex: q, $options: "i" } }
+          ]
+        }
+      : {};
 
-    const products = await Product.find({
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { category: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } }
-      ]
-    }).sort({ createdAt: -1 });
+    const products = await Product.find(filter).sort({ createdAt: -1 });
 
-    res.json(products);
+    return res.json({
+      success: true,
+      products
+    });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Search failed"
     });
@@ -33,17 +34,21 @@ export const searchProducts = async (req, res) => {
 };
 
 
-// ========================================
-// GET ALL PRODUCTS
-// ========================================
+/* =========================
+   GET ALL PRODUCTS
+========================= */
 export const getProducts = async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+
+    return res.json({
+      success: true,
+      products
+    });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch products"
     });
@@ -51,20 +56,13 @@ export const getProducts = async (req, res) => {
 };
 
 
-// ========================================
-// CREATE PRODUCT
-// ========================================
+/* =========================
+   CREATE PRODUCT
+========================= */
 export const createProduct = async (req, res) => {
   try {
-    const {
-      name,
-      price,
-      image,
-      category,
-      description
-    } = req.body;
+    const { name, price, image, category, description } = req.body;
 
-    // VALIDATION
     if (!name || !price || !category) {
       return res.status(400).json({
         success: false,
@@ -80,14 +78,14 @@ export const createProduct = async (req, res) => {
       description
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       product
     });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to create product"
     });
@@ -95,15 +93,15 @@ export const createProduct = async (req, res) => {
 };
 
 
-// ========================================
-// UPDATE PRODUCT
-// ========================================
+/* =========================
+   UPDATE PRODUCT
+========================= */
 export const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!product) {
@@ -113,14 +111,14 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       product
     });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to update product"
     });
@@ -128,9 +126,9 @@ export const updateProduct = async (req, res) => {
 };
 
 
-// ========================================
-// DELETE PRODUCT
-// ========================================
+/* =========================
+   DELETE PRODUCT
+========================= */
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
@@ -142,14 +140,14 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: "Product deleted"
     });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to delete product"
     });

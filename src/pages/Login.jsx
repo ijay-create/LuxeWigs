@@ -7,8 +7,9 @@ import Footer from "../components/Footer";
 
 import "../styles/auth.css";
 
-const Login = () => {
+const BASE_URL = import.meta.env.VITE_API_URL;
 
+const Login = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -16,61 +17,51 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
-
     e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("Fill all fields");
+    if (!email.trim() || !password.trim()) {
+      toast.error("Please fill all fields");
       return;
     }
 
     try {
-
       setLoading(true);
 
-      const res = await fetch(
-        "http://localhost:5000/api/auth/login",
-        {
-          method: "POST",
+      const res = await fetch(`${BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
 
-          headers: {
-            "Content-Type": "application/json"
-          },
-
-          body: JSON.stringify({
-            email,
-            password
-          })
-        }
-      );
-
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.message);
+        throw new Error(data.message || "Login failed");
       }
 
+      // store auth
       localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
+      toast.success("Login successful 🎉");
 
-      toast.success("Login Successful");
-
-      navigate("/profile");
+      // redirect based on role
+      if (data.user?.isAdmin) {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/profile");
+      }
 
     } catch (error) {
-
-      toast.error(error.message);
-
+      toast.error(error.message || "Something went wrong");
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   return (
@@ -78,45 +69,32 @@ const Login = () => {
       <Navbar />
 
       <section className="auth-page">
-
-        <form
-          className="auth-form"
-          onSubmit={handleLogin}
-        >
-
+        <form className="auth-form" onSubmit={handleLogin}>
           <h1>Login</h1>
 
           <input
             type="email"
             placeholder="Email Address"
             value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
+            onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button type="submit">
-            {loading ? "Loading..." : "Login"}
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
 
           <p>
-            Don't have an account?
-            <Link to="/register">
-              Register
-            </Link>
+            Don't have an account?{" "}
+            <Link to="/register">Register</Link>
           </p>
-
         </form>
-
       </section>
 
       <Footer />

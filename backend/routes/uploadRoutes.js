@@ -4,25 +4,43 @@ import cloudinary from "../config/cloudinary.js";
 
 const router = express.Router();
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage()
+});
 
 router.post("/", upload.single("image"), async (req, res) => {
   try {
+    // ✅ CHECK FILE FIRST (IMPORTANT FIX)
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No image file uploaded"
+      });
+    }
 
     const fileStr = req.file.buffer.toString("base64");
 
+    const fileType = req.file.mimetype;
+
+    // ✅ FIX: dynamic mime type
+    const dataUri = `data:${fileType};base64,${fileStr}`;
+
     const uploadResponse = await cloudinary.uploader.upload(
-      `data:image/png;base64,${fileStr}`,
+      dataUri,
       {
-        folder: "luxe-wigs" // 👈 THIS IS THE LINE YOU ASKED ABOUT
+        folder: "luxe-wigs"
       }
     );
 
-    res.json({ url: uploadResponse.secure_url });
+    return res.json({
+      url: uploadResponse.secure_url
+    });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Upload failed" });
+    console.log("UPLOAD ERROR:", error);
+
+    return res.status(500).json({
+      message: "Upload failed"
+    });
   }
 });
 

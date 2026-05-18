@@ -10,18 +10,20 @@ const FeaturedWigs = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWigs = async () => {
+    const load = async () => {
       try {
-        const data = await getProducts();
-        setWigs(data.slice(0, 8)); // top 8 featured
+        const products = await getProducts(); // ✅ already array
+
+        setWigs(products.slice(0, 8));
       } catch (err) {
-        console.error("Failed to load wigs:", err);
+        console.error(err);
+        setWigs([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchWigs();
+    load();
   }, []);
 
   return (
@@ -29,23 +31,17 @@ const FeaturedWigs = () => {
       <div className="container">
 
         <motion.div
-          className="featured-header"
-          initial={{ opacity: 0, y: 60 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
         >
-          <h2 className="section-title">
-            Featured Luxury Wigs
-          </h2>
-
-          <p className="section-subtitle">
-            Explore our premium collection
-          </p>
+          <h2>Featured Luxury Wigs</h2>
+          <p>Explore our premium collection</p>
         </motion.div>
 
         {loading ? (
-          <p>Loading featured wigs...</p>
+          <p>Loading...</p>
+        ) : wigs.length === 0 ? (
+          <p>No featured products available.</p>
         ) : (
           <div className="featured-grid">
             {wigs.map((item) => (
