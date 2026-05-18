@@ -1,7 +1,7 @@
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { FaTimes } from "react-icons/fa";
-import "../styles/cartDrawer.css";
+import "../styles/cartdrawer.css";
 
 const CartDrawer = ({ isOpen, onClose }) => {
 
