@@ -61,7 +61,9 @@ const Checkout = () => {
           });
 
           if (!res.ok) {
-            throw new Error("Order save failed");
+            const errorText = await res.text();
+            console.log("ORDER ERROR:", errorText);
+            throw new Error(errorText || "Order save failed");
           }
 
           // 🎉 CONFETTI (ONLY AFTER SUCCESS)
