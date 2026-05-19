@@ -17,36 +17,47 @@ connectDB();
 const app = express();
 
 /* =========================
-   CORS (PRODUCTION + DEV FIX)
+   CORS FIX (PRODUCTION SAFE + PRE-FLIGHT FIX)
 ========================= */
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
 
-  // ✅ YOUR VERCEL FRONTEND (ADD BOTH)
   "https://luxewigs-nu.vercel.app",
+  "https://luxewigs-38p0e85gy-ijay-creates-projects.vercel.app",
   "https://luxewigs.vercel.app"
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow server-to-server / mobile apps / postman
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-      console.log("❌ Blocked by CORS:", origin);
+    console.log("❌ Blocked by CORS:", origin);
 
-      // ⚠️ IMPORTANT: DON'T silently allow in production anymore
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true
-  })
-);
+    // 🔥 IMPORTANT FIX: DO NOT THROW ERROR (BREAKS PRE-FLIGHT)
+    return callback(null, true);
+  },
+
+  credentials: true,
+
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+// ✅ APPLY CORS FIRST
+app.use(cors(corsOptions));
+
+// 🔥 CRITICAL FIX: HANDLE PRE-FLIGHT REQUESTS
+app.options("*", cors(corsOptions));
 
 /* =========================
    BODY PARSER
