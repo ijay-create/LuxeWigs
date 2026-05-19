@@ -45,28 +45,46 @@ const Checkout = () => {
 
       onSuccess: async (response) => {
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userEmail: email,
-              customerName: name,
-              phone,
-              items: cartItems,
-              totalAmount: total,
-              reference: response.reference,
-            }),
-          });
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/orders`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
 
-          if (!res.ok) {
-            const errorText = await res.text();
-            console.log("ORDER ERROR:", errorText);
-            throw new Error(errorText || "Order save failed");
+              // ✅ FIX: cleaned payload (mobile-safe)
+              body: JSON.stringify({
+                userEmail: email,
+                customerName: name,
+                phone,
+
+                items: cartItems.map((item) => ({
+                  id: item.id || item._id,
+                  name: item.name,
+                  price: Number(String(item.price).replace(/,/g, "")),
+                  quantity: item.quantity,
+                })),
+
+                totalAmount: total,
+                reference: response.reference,
+              }),
+            }
+          );
+
+          let data = {};
+          try {
+            data = await res.json();
+          } catch (e) {
+            data = {};
           }
 
-          // 🎉 CONFETTI (ONLY AFTER SUCCESS)
+          if (!res.ok) {
+            console.log("ORDER ERROR:", data);
+            throw new Error(data.message || "Order save failed");
+          }
+
+          // 🎉 SUCCESS EFFECTS
           launchConfetti();
 
           clearCart();
@@ -76,7 +94,7 @@ const Checkout = () => {
             navigate("/success");
           }, 1200);
         } catch (error) {
-          console.log(error);
+          console.log("CHECKOUT ERROR:", error);
           alert("Payment successful but order failed to save");
         } finally {
           setLoading(false);
