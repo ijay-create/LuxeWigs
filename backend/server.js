@@ -28,7 +28,8 @@ const allowedOrigins = [
 
   "https://luxewigs-nu.vercel.app",
   "https://luxewigs.vercel.app",
-  "https://luxewigs-38p0e85gy-ijay-creates-projects.vercel.app"
+  "https://luxewigs-38p0e85gy-ijay-creates-projects.vercel.app",
+  "https://luxewigs-git-main-ijay-creates-projects.vercel.app"
 ];
 
 app.use(
