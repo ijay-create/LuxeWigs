@@ -17,7 +17,7 @@ connectDB();
 const app = express();
 
 /* =========================
-   CORS FIX (PRODUCTION SAFE + PRE-FLIGHT FIX)
+   CORS (ROBUST + SAFE FIX)
 ========================= */
 
 const allowedOrigins = [
@@ -32,8 +32,8 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // allow server-to-server / mobile apps / postman
+  origin: (origin, callback) => {
+    // allow mobile apps, postman, server-to-server
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -42,26 +42,50 @@ const corsOptions = {
 
     console.log("❌ Blocked by CORS:", origin);
 
-    // 🔥 IMPORTANT FIX: DO NOT THROW ERROR (BREAKS PRE-FLIGHT)
+    // IMPORTANT: never throw error (prevents Render crash + mobile failures)
     return callback(null, true);
   },
 
   credentials: true,
-
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-
   allowedHeaders: ["Content-Type", "Authorization"]
 };
 
-// ✅ APPLY CORS FIRST
-app.use(cors(corsOptions));
-
-// 🔥 CRITICAL FIX: HANDLE PRE-FLIGHT REQUESTS
-app.options("*", cors(corsOptions));
-
 /* =========================
-   BODY PARSER
+   MIDDLEWARE ORDER (IMPORTANT)
 ========================= */
+
+import cors from "cors";
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://luxewigs-nu.vercel.app",
+  "https://luxewigs-38p0e85gy-ijay-creates-projects.vercel.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("❌ BLOCKED:", origin);
+    return callback(null, true); // IMPORTANT: DO NOT break mobile/paystack
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+app.options("*", cors());
+
+
+// ✅ SAFE preflight handler (NO "*" - prevents Render crash)
+app.options(/.*/, cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -86,10 +110,10 @@ app.get("/", (req, res) => {
 });
 
 /* =========================
-   GLOBAL ERROR HANDLER
+   ERROR HANDLER
 ========================= */
 app.use((err, req, res, next) => {
-  console.error("❌ Server Error:", err.message);
+  console.error("❌ Server Error:", err);
 
   res.status(500).json({
     success: false,

@@ -1,139 +1,85 @@
-import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
-import { FaTimes } from "react-icons/fa";
-import "../styles/cartdrawer.css";
+import { createContext, useContext, useState } from "react";
 
-const CartDrawer = ({ isOpen, onClose }) => {
-  const {
-    cartItems,
-    removeFromCart,
-    increaseQuantity,
-    decreaseQuantity
-  } = useCart();
+const CartContext = createContext();
 
-  const navigate = useNavigate();
+/* =========================
+   CART PROVIDER
+========================= */
+export const CartProvider = ({ children }) => {
+  const [cartItems, setCartItems] = useState([]);
 
-  // SAFE PRICE PARSER
-  const getPrice = (price) =>
-    Number(String(price || 0).replace(/,/g, ""));
+  // ADD TO CART
+  const addToCart = (product) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
 
-  const total = cartItems.reduce(
-    (acc, item) =>
-      acc + getPrice(item.price) * item.quantity,
-    0
-  );
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  // REMOVE FROM CART
+  const removeFromCart = (id) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // INCREASE QTY
+  const increaseQuantity = (id) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
+  };
+
+  // DECREASE QTY
+  const decreaseQuantity = (id) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+
+  // CLEAR CART
+  const clearCart = () => setCartItems([]);
 
   return (
-    <>
-      {/* BACKDROP */}
-      <div
-        className={`cart-backdrop ${isOpen ? "show" : ""}`}
-        onClick={onClose}
-      />
-
-      {/* DRAWER */}
-      <div className={`cart-drawer ${isOpen ? "open" : ""}`}>
-
-        {/* HEADER */}
-        <div className="cart-header">
-          <h2>Your Cart</h2>
-
-          <button type="button" onClick={onClose}>
-            <FaTimes />
-          </button>
-        </div>
-
-        {/* BODY */}
-        <div className="cart-body">
-
-          {cartItems.length === 0 ? (
-            <p className="empty">Your cart is empty</p>
-          ) : (
-            cartItems.map((item) => {
-
-              // 🔥 FIX: ALWAYS NORMALIZE ID
-              const itemId = String(item._id || item.id);
-
-              return (
-                <div className="cart-item" key={itemId}>
-
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                  />
-
-                  <div className="cart-info">
-
-                    <h4>{item.name}</h4>
-
-                    <p>
-                      ₦{getPrice(item.price).toLocaleString()}
-                    </p>
-
-                    {/* QUANTITY CONTROLS */}
-                    <div className="qty-controls">
-
-                      <button
-                        type="button"
-                        onClick={() => decreaseQuantity(itemId)}
-                      >
-                        -
-                      </button>
-
-                      <span>{item.quantity}</span>
-
-                      <button
-                        type="button"
-                        onClick={() => increaseQuantity(itemId)}
-                      >
-                        +
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                  {/* REMOVE BUTTON (FIXED) */}
-                  <button
-                    type="button"
-                    className="remove-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromCart(itemId);
-                    }}
-                  >
-                    Remove
-                  </button>
-
-                </div>
-              );
-            })
-          )}
-
-        </div>
-
-        {/* FOOTER */}
-        <div className="cart-footer">
-
-          <h3>
-            Total: ₦{total.toLocaleString()}
-          </h3>
-
-          <button
-            className="checkout-btn"
-            onClick={() => {
-              onClose();
-              navigate("/checkout");
-            }}
-          >
-            Checkout
-          </button>
-
-        </div>
-
-      </div>
-    </>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        increaseQuantity,
+        decreaseQuantity,
+        clearCart,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
   );
 };
 
-export default CartDrawer;
+/* =========================
+   CUSTOM HOOK (THIS IS THE ONLY useCart)
+========================= */
+export const useCart = () => {
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("useCart must be used inside CartProvider");
+  }
+
+  return context;
+};
