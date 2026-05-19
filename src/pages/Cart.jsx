@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import "../styles/cart.css";
 
 const Cart = () => {
-
   const {
     cartItems,
     removeFromCart,
@@ -15,11 +14,13 @@ const Cart = () => {
     undoRemove
   } = useCart();
 
+  // 🔥 SAFE PRICE PARSER (FIXED BUG)
+  const getPrice = (price) =>
+    Number(String(price || 0).replace(/,/g, ""));
+
   const subtotal = cartItems.reduce(
     (acc, item) =>
-      acc +
-      parseInt(item.price.replace(/,/g, "")) *
-      item.quantity,
+      acc + getPrice(item.price) * (item.quantity || 1),
     0
   );
 
@@ -41,70 +42,79 @@ const Cart = () => {
                 <h2>Your cart is empty.</h2>
               ) : (
 
-                cartItems.map((item) => (
-                  <div className="cart-item" key={item.id}>
+                cartItems.map((item) => {
 
-                    <img src={item.image} alt={item.name} />
+                  // 🔥 FIX: SINGLE SOURCE OF TRUTH FOR ID
+                  const itemId = String(item._id || item.id);
 
-                    <div className="cart-details">
-                      <h3>{item.name}</h3>
-                      <p>₦{item.price}</p>
-                    </div>
+                  return (
+                    <div className="cart-item" key={itemId}>
 
-                    <div className="cart-quantity">
+                      <img src={item.image} alt={item.name} />
 
-                      <button onClick={() => decreaseQuantity(item.id)}>
-                        -
+                      <div className="cart-details">
+                        <h3>{item.name}</h3>
+
+                        <p>
+                          ₦{getPrice(item.price).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <div className="cart-quantity">
+
+                        <button onClick={() => decreaseQuantity(itemId)}>
+                          -
+                        </button>
+
+                        <span>{item.quantity}</span>
+
+                        <button onClick={() => increaseQuantity(itemId)}>
+                          +
+                        </button>
+
+                      </div>
+
+                      <button
+                        className="remove-btn"
+                        onClick={() => {
+
+                          removeFromCart(itemId);
+
+                          toast((t) => (
+                            <div>
+                              <p>Item removed from cart</p>
+
+                              <button
+                                onClick={() => {
+                                  undoRemove();
+                                  toast.dismiss(t.id);
+                                  toast.success("Item restored 🛒");
+                                }}
+                                style={{
+                                  marginTop: "5px",
+                                  background: "#000",
+                                  color: "#fff",
+                                  padding: "6px 12px",
+                                  borderRadius: "6px",
+                                  border: "none",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                Undo
+                              </button>
+                            </div>
+                          ), {
+                            duration: 5000
+                          });
+
+                        }}
+                      >
+                        Remove
                       </button>
 
-                      <span>{item.quantity}</span>
-
-                      <button onClick={() => increaseQuantity(item.id)}>
-                        +
-                      </button>
-
                     </div>
-
-                    <button
-                      className="remove-btn"
-                      onClick={() => {
-
-                        removeFromCart(item.id);
-
-                        toast((t) => (
-                          <div>
-                            <p>Item removed from cart</p>
-
-                            <button
-                              onClick={() => {
-                                undoRemove();
-                                toast.dismiss(t.id);
-                                toast.success("Item restored 🛒");
-                              }}
-                              style={{
-                                marginTop: "5px",
-                                background: "#000",
-                                color: "#fff",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                border: "none",
-                                cursor: "pointer"
-                              }}
-                            >
-                              Undo
-                            </button>
-                          </div>
-                        ), {
-                          duration: 5000
-                        });
-
-                      }}
-                    >
-                      Remove
-                    </button>
-
-                  </div>
-                ))
+                  );
+                })
 
               )}
 

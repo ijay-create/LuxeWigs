@@ -57,10 +57,38 @@
   cursor:pointer;
 }
 
+/* =========================
+   MOBILE FIX (IMPORTANT)
+========================= */
 @media(max-width:900px){
 
   .checkout-grid{
     grid-template-columns:1fr;
   }
+}
 
+/* 🔥 NEW FIX FOR NAVBAR OVERLAP */
+@media(max-width:768px){
+
+  .checkout-page{
+    padding:140px 5% 80px;
+  }
+}
+
+/* 🔥 SMALL PHONE FIX */
+@media(max-width:480px){
+
+  .checkout-page{
+    padding:120px 5% 70px;
+  }
+
+  .checkout-title{
+    font-size:1.6rem;
+    margin-bottom:40px;
+  }
+
+  .checkout-form,
+  .checkout-summary{
+    padding:25px;
+  }
 }
