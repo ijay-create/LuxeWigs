@@ -19,42 +19,40 @@ const app = express();
 /* =========================
    CORS
 ========================= */
-
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
 
-  "https://luxewigs-nu.vercel.app",
   "https://luxewigs.vercel.app",
-  "https://luxewigs-38p0e85gy-ijay-creates-projects.vercel.app",
-  "https://luxewigs-git-main-ijay-creates-projects.vercel.app"
+  "https://luxewigs-nu.vercel.app",
+  "https://luxewigs-git-main-ijay-creates-projects.vercel.app",
+  "https://luxewigs-c5xwh6x4q-ijay-creates-projects.vercel.app"
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
 
+      // ALLOW POSTMAN / MOBILE / SERVER REQUESTS
       if (!origin) {
         return callback(null, true);
       }
 
+      // ALLOW FRONTENDS
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      console.log("Blocked by CORS:", origin);
+      console.log("❌ Blocked by CORS:", origin);
 
-      return callback(null, true);
+      return callback(null, false);
     },
 
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    credentials: true
   })
 );
-
 /* =========================
    BODY PARSER
 ========================= */

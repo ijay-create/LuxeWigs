@@ -50,15 +50,13 @@ export const createOrder = async (req, res) => {
     });
 
     // 🔥 STEP 4: EMAIL (NON-BLOCKING)
-    try {
-      await sendOrderEmail({
-        email: userEmail,
-        name: customerName,
-        order
-      });
-    } catch (err) {
+    sendOrderEmail({
+      email: userEmail,
+      name: customerName,
+      order
+      }).catch((err) => {
       console.log("Email failed (non-critical):", err.message);
-    }
+    });
 
     return res.status(201).json({
       success: true,

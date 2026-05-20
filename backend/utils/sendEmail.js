@@ -8,6 +8,9 @@ export const sendOrderEmail = async ({
 
   try {
 
+    console.log("📨 Preparing email...");
+
+    // CREATE TRANSPORTER
     const transporter = nodemailer.createTransport({
       service: "gmail",
 
@@ -16,6 +19,11 @@ export const sendOrderEmail = async ({
         pass: process.env.EMAIL_PASS
       }
     });
+
+    // VERIFY SMTP CONNECTION
+    await transporter.verify();
+
+    console.log("✅ SMTP VERIFIED");
 
     // SAFE ITEMS
     const itemsList = order.items
@@ -51,13 +59,16 @@ Your order is being processed successfully.
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    // SEND EMAIL
+    const info = await transporter.sendMail(mailOptions);
 
     console.log("✅ EMAIL SENT SUCCESSFULLY");
+    console.log("📨 MESSAGE ID:", info.messageId);
 
   } catch (error) {
 
-    console.log("❌ Email failed:", error.message);
+    console.log("❌ EMAIL ERROR:");
+    console.log(error);
 
   }
 
